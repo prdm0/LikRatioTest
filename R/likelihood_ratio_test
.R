@@ -32,7 +32,6 @@
 #'   data <- rw(n = 100L, alpha = 1, beta = 1)
 #'
 #'   likelihood_ratio_test(f = pdf_w, data = data, kicks = c(1, 1), par0 = list("beta", 1))
-
 likelihood_ratio_test <- function(f, data, kicks, par0 = NULL, ...){
 
   if (is.null(par0)) stop("Informar uma lista informando o parâmetro e o valor sob a hipótese nula.")

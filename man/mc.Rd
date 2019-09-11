@@ -38,7 +38,7 @@ caso contrário.
 bla bla
 }
 \examples{
-fdp_ew <- function(par, x, var = NULL){
+pdf_ew <- function(par, x, var = NULL){
  alpha <- par[1]
  sigma <- par[2]
  theta <- par[3]
@@ -57,7 +57,7 @@ set.seed(1L, kind = "L'Ecuyer-CMRG")
 
 tictoc::tic()
 rejeicao <- unlist(pbmcapply::pbmclapply(X = 1L:1e3L, FUN = mc,
-                                        mc.cores = parallel::detectCores(), f = fdp_w, q = rw,
+                                        mc.cores = parallel::detectCores(), f = pdf_ew, q = rew,
                                         sig = 0.05, n = 100L, kicks = c(1, 1, 1),
                                         par0 = list("beta", 1.5),
                                         alpha = 1.7, beta = 1.5))
