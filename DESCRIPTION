@@ -1,0 +1,20 @@
+Package: LikRatioTest
+Title: What the Package Does (One Line, Title Case)
+Version: 0.1
+Authors@R: 
+    person(given = "Pedro Rafael",
+           family = "D. Marinho",
+           role = c("aut", "cre"),
+           email = "pedro.rafael.marinho@gmail.com")
+Description: What the package does (one paragraph).
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports:
+    pbmcapply,
+    tictoc,
+    parallel,
+    purrr
+Suggests: 
+    testthat (>= 2.1.0)
+RoxygenNote: 6.1.1
