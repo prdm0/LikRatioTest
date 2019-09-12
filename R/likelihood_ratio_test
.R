@@ -105,8 +105,8 @@ likelihood_ratio_test <- function(f, data, kicks, par0 = NULL, ...){
 #'rejeicao <- unlist(pbmcapply::pbmclapply(X = 1L:1e3L, FUN = mc,
 #'                                         mc.cores = parallel::detectCores(), f = pdf_ew, q = rew,
 #'                                         sig = 0.05, n = 100L, kicks = c(1, 1, 1),
-#'                                         par0 = list("beta", 1.5),
-#'                                         alpha = 1.7, beta = 1.5))
+#'                                         par0 = list("theta", 1),
+#'                                         alpha = 1.7, sigma = 1.5, theta = 1))
 #'
 #'# Proporção de rejeição ---------------------------------------------------
 #'sum(rejeicao)/length(rejeicao)
