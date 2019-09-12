@@ -14,8 +14,11 @@
 #' @param data Um conjunto de dados que será considerado para a realização do teste.
 #' @param par0 Uma lista contendo como primeiro elemento um vetor com o nomes das variáveis que serão fixadas como hipótese nula
 #' (variáveis aos quais desejamos testar) e um vetor com os valores fixados para cada uma das respectivas variáveis.
+#' @param kicks Chutes iniciais que desejamos considerar no método de otimização.
 #' @param ... Lista de argumentos adicionais que serão passados à função \code{optim()} otimizada para otimização. Por exemplo,
 #' será possível escolher o método de otimização a ser utilizado.
+#' @importFrom stats optim
+#' @importFrom stats qchisq
 #' @return Valor da estatística do teste da razão de verossimilhança generalizada.
 #' @examples
 #'  pdf_w <- function(par, x, var = NULL){
@@ -31,8 +34,8 @@
 #'
 #'   data <- rw(n = 100L, alpha = 1, beta = 1)
 #'
-#'   likelihood_ratio_test(f = pdf_w, data = data, kicks = c(1, 1), par0 = list("beta", 1))
-likelihood_ratio_test <- function(f, data, kicks, par0 = NULL, ...){
+#'   lrt(f = pdf_w, data = data, kicks = c(1, 1), par0 = list("beta", 1))
+lrt <- function(f, data, kicks, par0 = NULL, ...){
 
   if (is.null(par0)) stop("Informar uma lista informando o parâmetro e o valor sob a hipótese nula.")
 
@@ -70,8 +73,7 @@ likelihood_ratio_test <- function(f, data, kicks, par0 = NULL, ...){
 #' de significância, será retornado 1 (um) se a estatística de teste está acima do quantil da distribuição qui-quadrado e 0 (zero),
 #' caso contrário.
 #' @details bla bla
-#' @param i Para uma única realização de um procedimento de Monte-Carlo, esse parâmetro não terá importância. Esse perâmetro será
-#' utilizado em situações em que utiliza-se de um funcional para reproduzir a função \code{mc}.
+#' @param N Número de réplicas de Monte-Carlo a ser considerada.
 #' @param n Tamanho da amostra a ser considerada.
 #' @param sig Nível de significância adotado.
 #' @param f Função densidade de probabilidade considerada no teste. Essa função deverá ser implementada conforme o exemplo abaixo.
@@ -79,8 +81,8 @@ likelihood_ratio_test <- function(f, data, kicks, par0 = NULL, ...){
 #' @param kicks Vetor com os chutes iniciais utilizados para a otimização.
 #' @param par0 Lista com dois elementos, sendo o primeiro um vetor com os nomes das variáveis que receberão valores fixos sob a
 #' hipótese nula e o segundo elemendo é um outro vetor com os valores impostos às variáveis.
+#' @param ncores Número de núcleos a ser considerado. Por padrão, \code{ncores = 1L}.
 #' @param ... Lista de argumetos que serão passados para a função passada à \code{q}.
-#' @export
 #' @return Retornará 0 (zero) se a estatística calculado não estiver acima do quantil da distribuição qui-quadrado e 1 (um),
 #' caso contrário.
 #' @examples
@@ -91,7 +93,8 @@ likelihood_ratio_test <- function(f, data, kicks, par0 = NULL, ...){
 #'
 #'  if (is.list(var)) eval(parse(text = paste(var[[1]], " <- ", unlist(var[[2]]), sep = "")))
 #'
-#'  alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) * exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
+#'  alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) *
+#'  exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
 #'}
 #'
 #'rew <- function(n, alpha, sigma, theta){
@@ -102,29 +105,31 @@ likelihood_ratio_test <- function(f, data, kicks, par0 = NULL, ...){
 #'set.seed(1L, kind = "L'Ecuyer-CMRG")
 #'
 #'tictoc::tic()
-#'rejeicao <- unlist(pbmcapply::pbmclapply(X = 1L:1e3L, FUN = mc,
-#'                                         mc.cores = parallel::detectCores(), f = pdf_ew, q = rew,
-#'                                         sig = 0.05, n = 100L, kicks = c(1, 1, 1),
-#'                                         par0 = list("theta", 1),
-#'                                         alpha = 1.7, sigma = 1.5, theta = 1))
+#'rejeicao <- mc(N = 100L, n = 50L, sig = 0.05, f = pdf_ew, q = rew, kicks = c(1, 1, 1),
+#'               par0 = list("theta", 1), ncores = 1L, alpha = 1, sigma = 1, theta = 1)
 #'
 #'# Proporção de rejeição ---------------------------------------------------
 #'sum(rejeicao)/length(rejeicao)
 #'tictoc::toc()
+#' @export
 # Simulação de Monte-Carlo ------------------------------------------------
-mc <- function(i, n, sig = 0.05, f, q, kicks, par0, ...){
-  amostra <- q(n, ...)
-  result <- likelihood_ratio_test(f = f, data = amostra, kicks = kicks,
-                                  par0 = par0)
-
-  # Selecionando uma amostra que não gere erro nos chutes iniciais ----------
-  repeat{
+mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0, ncores = 1L, ...){
+  mc_one_step <- function(i){
     amostra <- q(n, ...)
-    result <- likelihood_ratio_test(f = f, data = amostra, kicks = kicks,
-                                    par0 = par0)
-    if (!is.na(result)) break
-  }
+    result <- lrt(f = f, data = amostra, kicks = kicks,
+                  par0 = par0)
 
-  q_teorico <- qchisq(p = 1 - sig, df = length(par0[[1]]))
-  ifelse(result > q_teorico, 1, 0) # Contando a rejeição.
+    # Selecionando uma amostra que não gere erro nos chutes iniciais ----------
+    repeat{
+      amostra <- q(n, ...)
+      result <- lrt(f = f, data = amostra, kicks = kicks,
+                    par0 = par0)
+      if (!is.na(result)) break
+    }
+
+    q_teorico <- qchisq(p = 1 - sig, df = length(par0[[1]]))
+    ifelse(result > q_teorico, 1, 0) # Contando a rejeição.
+  } # End mc_one_step().
+
+  unlist(pbmcapply::pbmclapply(X = 1L:N, FUN = mc_one_step, mc.cores = ncores))
 }
