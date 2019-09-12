@@ -59,11 +59,12 @@ rew <- function(n, alpha, sigma, theta){
 set.seed(1L, kind = "L'Ecuyer-CMRG")
 
 tictoc::tic()
-rejeicao <- mc(N = 100L, n = 50L, sig = 0.05, f = pdf_ew, q = rew, kicks = c(1, 1, 1),
-              par0 = list("theta", 1), ncores = 1L, alpha = 1, sigma = 1, theta = 1)
-
+result <- mc(N = 100L, n = 50L, sig = 0.05, f = pdf_ew, q = rew, kicks = c(1, 1, 1),
+            par0 = list("theta", 1), ncores = 1L, alpha = 1, sigma = 1, theta = 1)
+result <- as.data.frame(matrix(unlist(result), length(result), 2, byrow = TRUE))
+colnames(result) <- c("sucess", "ratio")
 # Proporção de rejeição ---------------------------------------------------
-sum(rejeicao)/length(rejeicao)
+sum(result$sucess)/length(result$sucess)
 tictoc::toc()
 }
 \author{

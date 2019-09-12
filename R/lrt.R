@@ -105,11 +105,12 @@ lrt <- function(f, data, kicks, par0 = NULL, ...){
 #'set.seed(1L, kind = "L'Ecuyer-CMRG")
 #'
 #'tictoc::tic()
-#'rejeicao <- mc(N = 100L, n = 50L, sig = 0.05, f = pdf_ew, q = rew, kicks = c(1, 1, 1),
-#'               par0 = list("theta", 1), ncores = 1L, alpha = 1, sigma = 1, theta = 1)
-#'
+#'result <- mc(N = 100L, n = 50L, sig = 0.05, f = pdf_ew, q = rew, kicks = c(1, 1, 1),
+#'             par0 = list("theta", 1), ncores = 1L, alpha = 1, sigma = 1, theta = 1)
+#'result <- as.data.frame(matrix(unlist(result), length(result), 2, byrow = TRUE))
+#'colnames(result) <- c("sucess", "ratio")
 #'# Proporção de rejeição ---------------------------------------------------
-#'sum(rejeicao)/length(rejeicao)
+#'sum(result$sucess)/length(result$sucess)
 #'tictoc::toc()
 #' @export
 # Simulação de Monte-Carlo ------------------------------------------------
@@ -128,8 +129,8 @@ mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0, ncores = 1L, ...)
     }
 
     q_teorico <- qchisq(p = 1 - sig, df = length(par0[[1]]))
-    ifelse(result > q_teorico, 1, 0) # Contando a rejeição.
+    list(sucess = ifelse(result > q_teorico, 1, 0), result = result) # Contando a rejeição.
   } # End mc_one_step().
 
-  unlist(pbmcapply::pbmclapply(X = 1L:N, FUN = mc_one_step, mc.cores = ncores))
+  pbmcapply::pbmclapply(X = 1L:N, FUN = mc_one_step, mc.cores = ncores)
 }
