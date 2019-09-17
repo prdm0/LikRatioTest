@@ -1,2 +1,2 @@
-# likelihood_ratio_test
+# LikRatioTest
 Likelihood Ratio Test
