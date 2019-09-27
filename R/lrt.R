@@ -134,3 +134,78 @@ mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0, ncores = 1L, ...)
 
   pbmcapply::pbmclapply(X = 1L:N, FUN = mc_one_step, mc.cores = ncores)
 }
+
+#' @title Encontra o quantil da distribuição Qui-Quadrado inf.
+#' @author Pedro Rafael D. Marinho
+#' @description  Encontra o quantil da distribuição Qui-Quadrado inf.
+#' @details A função recebe como argumento uma função densidade de probabilidade ou uma função de probabilidade
+#' que é passada como argumento à \code{f}. O objeto passado como argumento de \code{f} deverá ser implementado conforme os
+#' exemplos. Note que se a função for implementada segundo os exemplos, não haverá a necessidade de implementar a função sob a
+#' hipótese nula, visto que são as mesmas funções. Para especificar os parâmetros que serão fixados, i.e, para especificar
+#' a distribuição sob a hipótese nula, utiliza-se o argumento \code{par0} que receberá uma lista formada por dois vetores.
+#' O primeiro vetor da lista de verá ser um vetor de strings com os nomes das variáveis que deseja-se fixar e o segundo vetor
+#' deverá conter os valores que serão atribuidos à cada uma das variáveis passada ao primeiro vetor.
+#' @param fn Recebe a distribuição Qui-Quadrado inf.
+#' @param alpha Nível de significância adotado.
+#' @param bilateral Se \code{TRUE}, retorna os quantis para um teste bilateral.
+#' @param c Parâmetro da distribuição Qui-Quadrado inf.
+#' @param k Parâmetro da distribuição Qui-Quadrado inf.
+#' @examples
+#' est_q(fn = fdp_chisq_inf, alpha = 0.05, bilateral = F, c = 1, k = 1)
+#' fdp_chisq_inf <- function(par, x) {
+#' k <- par[1]
+#' c <- par[2]
+#' dchisq(x = x, df = k) * (1 - (1 - pchisq(q = x, df = k)) ^ c + c * pchisq(q = x, df = k) *
+#'                         (1 - pchisq(q = x, df = k)) ^ (c - 1))
+#' }
+#' est_q(fn = fdp_chisq_inf, alpha = 0.05, bilateral = F, c = 1, k = 1)
+#' @export
+est_q <- function(fn,
+                  alpha = 0.05,
+                  bilateral = FALSE,
+                  c,
+                  k) {
+  seq_q <- seq(from = 0.01, to = 100L, by = 0.01)
+
+  test_q1 <- function(q) {
+    integrate(
+      f = fn,
+      lower = 0,
+      upper = q,
+      par = c(c, k)
+    )$value
+  }
+
+  test_q2 <- function(q) {
+    integrate(
+      f = fn,
+      lower = q,
+      upper = Inf,
+      par = c(c, k)
+    )$value
+  }
+
+  if (bilateral == TRUE) {
+    for (i in  seq_q) {
+      q1 <- test_q1(i)
+      if (q1 >= alpha / 2)
+        break
+    }
+
+    for (j in  seq_q) {
+      q2 <- test_q2(j)
+      if (q2 <= alpha / 2)
+        break
+    }
+
+    return(list(q1 = i, q2 = j))
+
+  } else {
+    for (j in  seq_q) {
+      q2 <- test_q2(j)
+      if (q2 <= alpha)
+        break
+    }
+    return(j)
+  }
+}
