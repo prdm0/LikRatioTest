@@ -150,15 +150,15 @@ mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0, ncores = 1L, ...)
 #' @param bilateral Se \code{TRUE}, retorna os quantis para um teste bilateral.
 #' @param c Parâmetro da distribuição Qui-Quadrado inf.
 #' @param k Parâmetro da distribuição Qui-Quadrado inf.
+#' @importFrom stats integrate
 #' @examples
-#' est_q(fn = fdp_chisq_inf, alpha = 0.05, bilateral = F, c = 1, k = 1)
 #' fdp_chisq_inf <- function(par, x) {
 #' k <- par[1]
 #' c <- par[2]
 #' dchisq(x = x, df = k) * (1 - (1 - pchisq(q = x, df = k)) ^ c + c * pchisq(q = x, df = k) *
 #'                         (1 - pchisq(q = x, df = k)) ^ (c - 1))
 #' }
-#' est_q(fn = fdp_chisq_inf, alpha = 0.05, bilateral = F, c = 1, k = 1)
+#' est_q(fn = fdp_chisq_inf, alpha = 0.05, bilateral = FALSE, c = 1, k = 1)
 #' @export
 est_q <- function(fn,
                   alpha = 0.05,
