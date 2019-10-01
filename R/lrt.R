@@ -109,7 +109,6 @@ lrt <- function(f, data, kicks, par0 = NULL, ...){
 #'result <- mc(N = 100L, n = 50L, sig = 0.05, f = pdf_ew, q = rew,
 #'             kicks = c(1, 1, 1), par0 = list("theta", 1), ncores = 4L,
 #'             alpha = 1, sigma = 1, theta = 1, p = 0.3)
-#'result <- as.data.frame(matrix(unlist(result), length(result), 2, byrow = TRUE))
 #'tictoc::toc()
 #' @export
 # Simulação de Monte-Carlo ------------------------------------------------
