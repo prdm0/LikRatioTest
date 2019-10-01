@@ -126,9 +126,9 @@ mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0,
   }
 
   quantile_chisq <- function(sig, bilateral = FALSE){
-    ifelse(bilateral == FALSE, result <- qchisq(p = 1 - sig, df = 2),
-           result <- list(q1 = qchisq(p = sig / 2, df = 2),
-                          q2 = qchisq(p = 1 - sig / 2, df = 2)))
+    ifelse(bilateral == FALSE, result <- qchisq(p = 1 - sig, df =  length(par0[[1]])),
+           result <- list(q1 = qchisq(p = sig / 2, df =  length(par0[[1]])),
+                          q2 = qchisq(p = 1 - sig / 2, df =  length(par0[[1]]))))
     result
   }
 
