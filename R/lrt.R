@@ -116,9 +116,9 @@ lrt <- function(f, data, kicks, par0 = NULL, ...){
 # Simulação de Monte-Carlo ------------------------------------------------
 mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0, ncores = 1L, ...){
   mc_one_step <- function(i){
-    amostra <- q(n, ...)
-    result <- lrt(f = f, data = amostra, kicks = kicks,
-                  par0 = par0)
+    #amostra <- q(n, ...)
+    #result <- lrt(f = f, data = amostra, kicks = kicks,
+    #              par0 = par0)
 
     # Selecionando uma amostra que não gere erro nos chutes iniciais ----------
     repeat{
@@ -165,7 +165,7 @@ est_q <- function(fn,
                   bilateral = FALSE,
                   c,
                   k) {
-  seq_q <- seq(from = 0.01, to = 100L, by = 0.01)
+  seq_q <- seq(from = 0.01, to = 1e3L, by = 0.01)
 
   test_q1 <- function(q) {
     integrate(
