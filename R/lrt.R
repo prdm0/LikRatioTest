@@ -105,21 +105,34 @@ lrt <- function(f, data, kicks, par0 = NULL, ...){
 #'set.seed(1L, kind = "L'Ecuyer-CMRG")
 #'
 #'tictoc::tic()
-#'result <- mc(N = 100L, n = 50L, sig = 0.05, f = pdf_ew, q = rew, kicks = c(1, 1, 1),
-#'             par0 = list("theta", 1), ncores = 1L, alpha = 1, sigma = 1, theta = 1)
+#'result <- mc(N = 100L, n = 50L, sig = 0.05, f = pdf_ew, q = rew,
+#'             kicks = c(1, 1, 1), par0 = list("theta", 1), ncores = 4L,
+#'             alpha = 1, sigma = 1, theta = 1, p = 0.3)
 #'result <- as.data.frame(matrix(unlist(result), length(result), 2, byrow = TRUE))
-#'colnames(result) <- c("sucess", "ratio")
-#'# Proporção de rejeição ---------------------------------------------------
-#'sum(result$sucess)/length(result$sucess)
 #'tictoc::toc()
 #' @export
 # Simulação de Monte-Carlo ------------------------------------------------
-mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0, ncores = 1L, ...){
-  mc_one_step <- function(i){
-    #amostra <- q(n, ...)
-    #result <- lrt(f = f, data = amostra, kicks = kicks,
-    #              par0 = par0)
+mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0,
+               ncores = 1L, p, bilateral = FALSE, ...){
 
+  c <- p * log(n) # Regra para escolhar de c.
+
+  # Função densidade de probabilidade Qui-Quadrado inf.
+  fdp_chisq_inf <- function(par, x) {
+    k <- par[1]
+    c <- par[2]
+    dchisq(x = x, df = k) * (1 - (1 - pchisq(q = x, df = k)) ^ c + c * pchisq(q = x, df = k) *
+                               (1 - pchisq(q = x, df = k)) ^ (c - 1))
+  }
+
+  quantile_chisq <- function(sig, bilateral = FALSE){
+    ifelse(bilateral == FALSE, result <- qchisq(p = 1 - sig, df = 2),
+           result <- list(q1 = qchisq(p = sig / 2, df = 2),
+                          q2 = qchisq(p = 1 - sig / 2, df = 2)))
+    result
+  }
+
+  mc_one_step <- function(i){
     # Selecionando uma amostra que não gere erro nos chutes iniciais ----------
     repeat{
       amostra <- q(n, ...)
@@ -128,11 +141,32 @@ mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0, ncores = 1L, ...)
       if (!is.na(result)) break
     }
 
-    q_teorico <- qchisq(p = 1 - sig, df = length(par0[[1]]))
-    list(sucess = ifelse(result > q_teorico, 1, 0), result = result) # Contando a rejeição.
+    # Quantil da distribuição qui-quadrado.
+    q_chisq <- quantile_chisq(sig, bilateral)
+
+    # Quantil obtido da distribuição qui-quadrado inf.
+    q_inf <- est_q(fn = fdp_chisq_inf, alpha = sig, bilateral = bilateral,
+                   c = c, k = length(par0[[1]]))
+
+    if (bilateral == TRUE){
+      sucess <- ifelse(result > q_chisq$q2 || result < q_chisq$q1, 1L, 0L)
+      sucess_inf <- ifelse(result > q_inf$q2 || result < q_inf$q1, 1L, 0L)
+      return(list(result = result, sucess = sucess, sucess_inf = sucess_inf))
+    } else {
+      sucess <- ifelse(result > q_chisq, 1L, 0L)
+      sucess_inf <- ifelse(result > q_inf, 1L, 0L)
+      return(list(result = result, sucess = sucess, sucess_inf = sucess_inf))
+    }
   } # End mc_one_step().
 
-  pbmcapply::pbmclapply(X = 1L:N, FUN = mc_one_step, mc.cores = ncores)
+  result_vector <- unlist(pbmcapply::pbmclapply(X = 1L:N, FUN = mc_one_step, mc.cores = ncores))
+
+  result <- as_tibble(matrix(result_vector, byrow = TRUE, ncol = 3L))
+
+  names(result) <- c("lambda", "sucess_chisq", "sucess_inf")
+
+  list(result = result, prop_chisq = mean(result$sucess_chisq),
+       prop_inf = mean(result$sucess_inf))
 }
 
 #' @title Encontra o quantil da distribuição Qui-Quadrado inf.

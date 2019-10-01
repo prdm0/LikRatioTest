@@ -13,4 +13,5 @@ LazyData: true
 Imports:
     pbmcapply,
     tictoc,
+    tibble,
 RoxygenNote: 6.1.1
