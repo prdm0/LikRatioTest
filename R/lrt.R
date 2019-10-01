@@ -83,6 +83,7 @@ lrt <- function(f, data, kicks, par0 = NULL, ...){
 #' hipótese nula e o segundo elemendo é um outro vetor com os valores impostos às variáveis.
 #' @param ncores Número de núcleos a ser considerado. Por padrão, \code{ncores = 1L}.
 #' @param ... Lista de argumetos que serão passados para a função passada à \code{q}.
+#' @importFrom tibble as_tibble
 #' @return Retornará 0 (zero) se a estatística calculado não estiver acima do quantil da distribuição qui-quadrado e 1 (um),
 #' caso contrário.
 #' @examples
