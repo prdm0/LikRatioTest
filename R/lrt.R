@@ -199,7 +199,7 @@ est_q <- function(fn,
                   bilateral = FALSE,
                   c,
                   k) {
-  seq_q <- seq(from = 0.01, to = 1e3L, by = 0.01)
+  seq_q <- seq(from = 0.001, to = 1e3L, by = 0.001)
 
   test_q1 <- function(q) {
     integrate(
