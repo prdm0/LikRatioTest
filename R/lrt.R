@@ -187,9 +187,9 @@ mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0,
 #' @importFrom stats integrate
 #' @examples
 #' fdp_chisq_inf <- function(par, x) {
-#' k <- par[1]
-#' c <- par[2]
-#' dchisq(x = x, df = k) * (1 - (1 - pchisq(q = x, df = k)) ^ c + c * pchisq(q = x, df = k) *
+#'   k <- par[1]
+#'   c <- par[2]
+#'   dchisq(x = x, df = k) * (1 - (1 - pchisq(q = x, df = k)) ^ c + c * pchisq(q = x, df = k) *
 #'                         (1 - pchisq(q = x, df = k)) ^ (c - 1))
 #' }
 #' est_q(fn = fdp_chisq_inf, alpha = 0.05, bilateral = FALSE, c = 1, k = 1)
@@ -206,7 +206,7 @@ est_q <- function(fn,
       f = fn,
       lower = 0,
       upper = q,
-      par = c(c, k)
+      par = c(k, c)
     )$value
   }
 
@@ -215,7 +215,7 @@ est_q <- function(fn,
       f = fn,
       lower = q,
       upper = Inf,
-      par = c(c, k)
+      par = c(k, c)
     )$value
   }
 
