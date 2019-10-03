@@ -228,7 +228,7 @@ est_q <- function(fn,
 
     for (j in  seq_q) {
       q2 <- test_q2(j)
-      if (q2 <= alpha / 2)
+      if (q2 >= 1 - alpha / 2)
         break
     }
 
