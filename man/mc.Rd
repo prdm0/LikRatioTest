@@ -46,27 +46,35 @@ caso contrário.
 }
 \examples{
 pdf_ew <- function(par, x, var = NULL){
- alpha <- par[1]
- sigma <- par[2]
- theta <- par[3]
+alpha <- par[1]
+sigma <- par[2]
+theta <- par[3]
 
- if (is.list(var)) eval(parse(text = paste(var[[1]], " <- ", unlist(var[[2]]), sep = "")))
+if (is.list(var)) eval(parse(text = paste(var[[1]], " <- ", unlist(var[[2]]), sep = "")))
 
- alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) *
- exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
+alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) *
+  exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
 }
 
 rew <- function(n, alpha, sigma, theta){
- u <- runif(n, 0, 1)
- sigma * (-log(1 - u ^ (1 / theta))) ^ (1 / alpha)
+  u <- runif(n, 0, 1)
+  sigma * (-log(1 - u ^ (1 / theta))) ^ (1 / alpha)
 }
 
 set.seed(1L, kind = "L'Ecuyer-CMRG")
 
 tictoc::tic()
-result <- mc(N = 100L, n = 50L, sig = 0.05, f = pdf_ew, q = rew,
-            kicks = c(1, 1, 1), par0 = list("theta", 1), ncores = 4L,
-            alpha = 1, sigma = 1, theta = 1, p = 0.3)
+result <- mc(N = 100L,
+             n = 50L,
+             sig = 0.05,
+             f = pdf_ew,
+             q = rew,
+             kicks = c(1, 1, 1),
+             par0 = list("theta", 1),
+             ncores = 1L,
+             p = 0.5,
+             bilateral = FALSE,
+             step = 0.001, alpha = 1, sigma = 1, theta = 1)
 tictoc::toc()
 }
 \author{

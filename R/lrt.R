@@ -97,32 +97,41 @@ lrt <- function(f, data, kicks, par0 = NULL, ...) {
 #' O padrão considera \code{step = 1e-3}.
 #' @param ... Lista de argumetos que serão passados para a função passada à \code{q}.
 #' @importFrom tibble as_tibble
+#' @importFrom stats dchisq pchisq
 #' @return Retornará 0 (zero) se a estatística calculado não estiver acima do quantil da distribuição qui-quadrado e 1 (um),
 #' caso contrário.
 #' @examples
-#'pdf_ew <- function(par, x, var = NULL){
-#'  alpha <- par[1]
-#'  sigma <- par[2]
-#'  theta <- par[3]
+#' pdf_ew <- function(par, x, var = NULL){
+#' alpha <- par[1]
+#' sigma <- par[2]
+#' theta <- par[3]
 #'
-#'  if (is.list(var)) eval(parse(text = paste(var[[1]], " <- ", unlist(var[[2]]), sep = "")))
+#' if (is.list(var)) eval(parse(text = paste(var[[1]], " <- ", unlist(var[[2]]), sep = "")))
 #'
-#'  alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) *
-#'  exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
-#'}
+#' alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) *
+#'   exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
+#' }
 #'
-#'rew <- function(n, alpha, sigma, theta){
-#'  u <- runif(n, 0, 1)
-#'  sigma * (-log(1 - u ^ (1 / theta))) ^ (1 / alpha)
-#'}
+#' rew <- function(n, alpha, sigma, theta){
+#'   u <- runif(n, 0, 1)
+#'   sigma * (-log(1 - u ^ (1 / theta))) ^ (1 / alpha)
+#' }
 #'
-#'set.seed(1L, kind = "L'Ecuyer-CMRG")
+#' set.seed(1L, kind = "L'Ecuyer-CMRG")
 #'
-#'tictoc::tic()
-#'result <- mc(N = 100L, n = 50L, sig = 0.05, f = pdf_ew, q = rew,
-#'             kicks = c(1, 1, 1), par0 = list("theta", 1), ncores = 4L,
-#'             alpha = 1, sigma = 1, theta = 1, p = 0.3)
-#'tictoc::toc()
+#' tictoc::tic()
+#' result <- mc(N = 100L,
+#'              n = 50L,
+#'              sig = 0.05,
+#'              f = pdf_ew,
+#'              q = rew,
+#'              kicks = c(1, 1, 1),
+#'              par0 = list("theta", 1),
+#'              ncores = 1L,
+#'              p = 0.5,
+#'              bilateral = FALSE,
+#'              step = 0.001, alpha = 1, sigma = 1, theta = 1)
+#' tictoc::toc()
 #' @export
 # Simulação de Monte-Carlo ------------------------------------------------
 mc <- function(N = 1L,
@@ -160,6 +169,20 @@ mc <- function(N = 1L,
     result
   }
 
+  # Quantil da distribuição qui-quadrado.
+  q_chisq <- quantile_chisq(sig, bilateral)
+
+  # Quantil obtido da distribuição qui-quadrado inf.
+  q_inf <-
+    est_q(
+      fn = fdp_chisq_inf,
+      alpha = sig,
+      bilateral = bilateral,
+      step = step,
+      c = c,
+      k = length(par0[[1]])
+    )
+
   mc_one_step <- function(i) {
     # Selecionando uma amostra que não gere erro nos chutes iniciais ----------
     repeat {
@@ -173,20 +196,6 @@ mc <- function(N = 1L,
       if (!is.na(result))
         break
     }
-
-    # Quantil da distribuição qui-quadrado.
-    q_chisq <- quantile_chisq(sig, bilateral)
-
-    # Quantil obtido da distribuição qui-quadrado inf.
-    q_inf <-
-      est_q(
-        fn = fdp_chisq_inf,
-        alpha = sig,
-        bilateral = bilateral,
-        step = step,
-        c = c,
-        k = length(par0[[1]])
-      )
 
     if (bilateral == TRUE) {
       sucess <- ifelse(result > q_chisq$q2 || result < q_chisq$q1, 1L, 0L)
