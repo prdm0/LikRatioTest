@@ -181,7 +181,10 @@ mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0,
 #' deverá conter os valores que serão atribuidos à cada uma das variáveis passada ao primeiro vetor.
 #' @param fn Recebe a distribuição Qui-Quadrado inf.
 #' @param alpha Nível de significância adotado.
-#' @param bilateral Se \code{TRUE}, retorna os quantis para um teste bilateral.
+#' @param bilateral Se \code{TRUE}, retorna os quantis para um teste bilateral. O padrão considera
+#' \code{bilateral  = FALSE}.
+#' @param step Tamanho do passo da integral numeérica responsável pela obtenção dos quantis da Qui-Quadrado inf.
+#' O padrão considera \code{step = 1e-4}.
 #' @param c Parâmetro da distribuição Qui-Quadrado inf.
 #' @param k Parâmetro da distribuição Qui-Quadrado inf.
 #' @importFrom stats integrate
@@ -197,9 +200,10 @@ mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0,
 est_q <- function(fn,
                   alpha = 0.05,
                   bilateral = FALSE,
+                  step = 1e-4,
                   c,
                   k) {
-  seq_q <- seq(from = 0.001, to = 1e3L, by = 0.001)
+  seq_q <- seq(from = 0, to = 1e3L, by = step)
 
   test_q1 <- function(q) {
     integrate(
