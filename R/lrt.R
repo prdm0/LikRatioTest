@@ -35,31 +35,40 @@
 #'   data <- rw(n = 100L, alpha = 1, beta = 1)
 #'
 #'   lrt(f = pdf_w, data = data, kicks = c(1, 1), par0 = list("beta", 1))
-lrt <- function(f, data, kicks, par0 = NULL, ...){
-
-  if (is.null(par0)) stop("Informar uma lista informando o parâmetro e o valor sob a hipótese nula.")
+lrt <- function(f, data, kicks, par0 = NULL, ...) {
+  if (is.null(par0))
+    stop("Informar uma lista informando o parâmetro e o valor sob a hipótese nula.")
 
   # Log-Likelihood under the null hypothesis. -----------------------------------
-  log_lik_h0 <- function(par, x){
+  log_lik_h0 <- function(par, x) {
     -sum(log(f(par, x, var = par0)))
   }
 
   # Log-Likelihood under the null hypothesis. -----------------------------------
-  log_lik <- function(par, x){
+  log_lik <- function(par, x) {
     -sum(log(f(par, x)))
   }
 
-  myoptim <- function(...) tryCatch(expr = optim(...), error = function(e) NA)
+  myoptim <-
+    function(...)
+      tryCatch(
+        expr = optim(...),
+        error = function(e)
+          NA
+      )
 
   par_h0 <- myoptim(par = kicks, fn = log_lik_h0, x = data, ...)
 
-  if(!is.list(par_h0) || par_h0$convergence != 0L) return(NA)
+  if (!is.list(par_h0) || par_h0$convergence != 0L)
+    return(NA)
 
   par_h <- myoptim(par = kicks, fn = log_lik, x = data, ...)
 
-  if(!is.list(par_h) || par_h$convergence != 0L) return(NA)
+  if (!is.list(par_h) || par_h$convergence != 0L)
+    return(NA)
 
-  lambda <- 2 * (log_lik_h0(par = par_h0$par, x = data) - log_lik(par_h$par, x = data))
+  lambda <-
+    2 * (log_lik_h0(par = par_h0$par, x = data) - log_lik(par_h$par, x = data))
 
   lambda[lambda < 0] <- 0
 
@@ -72,7 +81,6 @@ lrt <- function(f, data, kicks, par0 = NULL, ...){
 #' @description Realiza uma única iteração de um procedimento de Monte-Carlo para o teste da razão de verossimilhança generalizado. Dado um nível
 #' de significância, será retornado 1 (um) se a estatística de teste está acima do quantil da distribuição qui-quadrado e 0 (zero),
 #' caso contrário.
-#' @details bla bla
 #' @param N Número de réplicas de Monte-Carlo a ser considerada.
 #' @param n Tamanho da amostra a ser considerada.
 #' @param sig Nível de significância adotado.
@@ -82,6 +90,11 @@ lrt <- function(f, data, kicks, par0 = NULL, ...){
 #' @param par0 Lista com dois elementos, sendo o primeiro um vetor com os nomes das variáveis que receberão valores fixos sob a
 #' hipótese nula e o segundo elemendo é um outro vetor com os valores impostos às variáveis.
 #' @param ncores Número de núcleos a ser considerado. Por padrão, \code{ncores = 1L}.
+#' @param bilateral Se \code{TRUE}, retorna os quantis para um teste bilateral. O padrão considera
+#' \code{bilateral  = FALSE}.
+#' @param p Valor utilizado para controlar o parâmetro da Qui-quadrado inf.
+#' @param step Tamanho do passo da integral numeérica responsável pela obtenção dos quantis da Qui-Quadrado inf.
+#' O padrão considera \code{step = 1e-3}.
 #' @param ... Lista de argumetos que serão passados para a função passada à \code{q}.
 #' @importFrom tibble as_tibble
 #' @return Retornará 0 (zero) se a estatística calculado não estiver acima do quantil da distribuição qui-quadrado e 1 (um),
@@ -112,9 +125,18 @@ lrt <- function(f, data, kicks, par0 = NULL, ...){
 #'tictoc::toc()
 #' @export
 # Simulação de Monte-Carlo ------------------------------------------------
-mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0,
-               ncores = 1L, p, bilateral = FALSE, ...){
-
+mc <- function(N = 1L,
+               n = 50L,
+               sig = 0.05,
+               f,
+               q,
+               kicks,
+               par0,
+               ncores = 1L,
+               p,
+               bilateral = FALSE,
+               step = 1e-3,
+               ...) {
   c <- p * log(n) # Regra para escolhar de c.
 
   # Função densidade de probabilidade Qui-Quadrado inf.
@@ -125,48 +147,84 @@ mc <- function(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0,
                                (1 - pchisq(q = x, df = k)) ^ (c - 1))
   }
 
-  quantile_chisq <- function(sig, bilateral = FALSE){
-    ifelse(bilateral == FALSE, result <- qchisq(p = 1 - sig, df =  length(par0[[1]])),
-           result <- list(q1 = qchisq(p = sig / 2, df =  length(par0[[1]])),
-                          q2 = qchisq(p = 1 - sig / 2, df =  length(par0[[1]]))))
+  quantile_chisq <- function(sig, bilateral = FALSE) {
+    ifelse(
+      bilateral == FALSE,
+      result <- qchisq(p = 1 - sig, df =  length(par0[[1]])),
+      result <-
+        list(
+          q1 = qchisq(p = sig / 2, df = length(par0[[1]])),
+          q2 = qchisq(p = 1 - sig / 2, df = length(par0[[1]]))
+        )
+    )
     result
   }
 
-  mc_one_step <- function(i){
+  mc_one_step <- function(i) {
     # Selecionando uma amostra que não gere erro nos chutes iniciais ----------
-    repeat{
+    repeat {
       amostra <- q(n, ...)
-      result <- lrt(f = f, data = amostra, kicks = kicks,
-                    par0 = par0)
-      if (!is.na(result)) break
+      result <- lrt(
+        f = f,
+        data = amostra,
+        kicks = kicks,
+        par0 = par0
+      )
+      if (!is.na(result))
+        break
     }
 
     # Quantil da distribuição qui-quadrado.
     q_chisq <- quantile_chisq(sig, bilateral)
 
     # Quantil obtido da distribuição qui-quadrado inf.
-    q_inf <- est_q(fn = fdp_chisq_inf, alpha = sig, bilateral = bilateral,
-                   c = c, k = length(par0[[1]]))
+    q_inf <-
+      est_q(
+        fn = fdp_chisq_inf,
+        alpha = sig,
+        bilateral = bilateral,
+        step = step,
+        c = c,
+        k = length(par0[[1]])
+      )
 
-    if (bilateral == TRUE){
+    if (bilateral == TRUE) {
       sucess <- ifelse(result > q_chisq$q2 || result < q_chisq$q1, 1L, 0L)
-      sucess_inf <- ifelse(result > q_inf$q2 || result < q_inf$q1, 1L, 0L)
-      return(list(result = result, sucess = sucess, sucess_inf = sucess_inf))
+      sucess_inf <-
+        ifelse(result > q_inf$q2 || result < q_inf$q1, 1L, 0L)
+      return(list(
+        result = result,
+        sucess = sucess,
+        sucess_inf = sucess_inf
+      ))
     } else {
       sucess <- ifelse(result > q_chisq, 1L, 0L)
       sucess_inf <- ifelse(result > q_inf, 1L, 0L)
-      return(list(result = result, sucess = sucess, sucess_inf = sucess_inf))
+      return(list(
+        result = result,
+        sucess = sucess,
+        sucess_inf = sucess_inf
+      ))
     }
   } # End mc_one_step().
 
-  result_vector <- unlist(pbmcapply::pbmclapply(X = 1L:N, FUN = mc_one_step, mc.cores = ncores))
+  result_vector <-
+    unlist(pbmcapply::pbmclapply(
+      X = 1L:N,
+      FUN = mc_one_step,
+      mc.cores = ncores
+    ))
 
-  result <- as_tibble(matrix(result_vector, byrow = TRUE, ncol = 3L))
+  result <-
+    as_tibble(matrix(result_vector, byrow = TRUE, ncol = 3L))
 
   names(result) <- c("lambda", "sucess_chisq", "sucess_inf")
 
-  list(result = result, prop_chisq = mean(result$sucess_chisq),
-       prop_inf = mean(result$sucess_inf))
+  list(
+    result = result,
+    prop_chisq = mean(result$sucess_chisq),
+    prop_inf = mean(result$sucess_inf)
+  )
 }
 
 #' @title Encontra o quantil da distribuição Qui-Quadrado inf.

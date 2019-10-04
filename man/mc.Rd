@@ -5,7 +5,7 @@
 \title{Simulações de Monte-Carlo para o teste da razão de verossimilhança generalizado.}
 \usage{
 mc(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0, ncores = 1L, p,
-  bilateral = FALSE, ...)
+  bilateral = FALSE, step = 0.001, ...)
 }
 \arguments{
 \item{N}{Número de réplicas de Monte-Carlo a ser considerada.}
@@ -25,6 +25,14 @@ hipótese nula e o segundo elemendo é um outro vetor com os valores impostos à
 
 \item{ncores}{Número de núcleos a ser considerado. Por padrão, \code{ncores = 1L}.}
 
+\item{p}{Valor utilizado para controlar o parâmetro da Qui-quadrado inf.}
+
+\item{bilateral}{Se \code{TRUE}, retorna os quantis para um teste bilateral. O padrão considera
+\code{bilateral  = FALSE}.}
+
+\item{step}{Tamanho do passo da integral numeérica responsável pela obtenção dos quantis da Qui-Quadrado inf.
+O padrão considera \code{step = 1e-3}.}
+
 \item{...}{Lista de argumetos que serão passados para a função passada à \code{q}.}
 }
 \value{
@@ -35,9 +43,6 @@ caso contrário.
 Realiza uma única iteração de um procedimento de Monte-Carlo para o teste da razão de verossimilhança generalizado. Dado um nível
 de significância, será retornado 1 (um) se a estatística de teste está acima do quantil da distribuição qui-quadrado e 0 (zero),
 caso contrário.
-}
-\details{
-bla bla
 }
 \examples{
 pdf_ew <- function(par, x, var = NULL){

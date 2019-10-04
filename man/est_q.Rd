@@ -4,14 +4,18 @@
 \alias{est_q}
 \title{Encontra o quantil da distribuição Qui-Quadrado inf.}
 \usage{
-est_q(fn, alpha = 0.05, bilateral = FALSE, c, k)
+est_q(fn, alpha = 0.05, bilateral = FALSE, step = 1e-04, c, k)
 }
 \arguments{
 \item{fn}{Recebe a distribuição Qui-Quadrado inf.}
 
 \item{alpha}{Nível de significância adotado.}
 
-\item{bilateral}{Se \code{TRUE}, retorna os quantis para um teste bilateral.}
+\item{bilateral}{Se \code{TRUE}, retorna os quantis para um teste bilateral. O padrão considera
+\code{bilateral  = FALSE}.}
+
+\item{step}{Tamanho do passo da integral numeérica responsável pela obtenção dos quantis da Qui-Quadrado inf.
+O padrão considera \code{step = 1e-4}.}
 
 \item{c}{Parâmetro da distribuição Qui-Quadrado inf.}
 
@@ -31,9 +35,9 @@ deverá conter os valores que serão atribuidos à cada uma das variáveis passa
 }
 \examples{
 fdp_chisq_inf <- function(par, x) {
-k <- par[1]
-c <- par[2]
-dchisq(x = x, df = k) * (1 - (1 - pchisq(q = x, df = k)) ^ c + c * pchisq(q = x, df = k) *
+  k <- par[1]
+  c <- par[2]
+  dchisq(x = x, df = k) * (1 - (1 - pchisq(q = x, df = k)) ^ c + c * pchisq(q = x, df = k) *
                         (1 - pchisq(q = x, df = k)) ^ (c - 1))
 }
 est_q(fn = fdp_chisq_inf, alpha = 0.05, bilateral = FALSE, c = 1, k = 1)
