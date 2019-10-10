@@ -134,7 +134,7 @@ lrt <- function(f, data, kicks, par0 = NULL, ...) {
 #' tictoc::toc()
 #' @export
 # Simulação de Monte-Carlo ------------------------------------------------
-mc <- function(N = 1L,
+  mc <- function(N = 1L,
                n = 50L,
                sig = 0.05,
                f,
@@ -221,8 +221,7 @@ mc <- function(N = 1L,
     unlist(pbmcapply::pbmclapply(
       X = 1L:N,
       FUN = mc_one_step,
-      mc.cores = ncores,
-      mc.set.seed = TRUE
+      mc.cores = ncores
     ))
 
   result <-
