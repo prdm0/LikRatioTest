@@ -221,7 +221,8 @@ mc <- function(N = 1L,
     unlist(pbmcapply::pbmclapply(
       X = 1L:N,
       FUN = mc_one_step,
-      mc.cores = ncores
+      mc.cores = ncores,
+      mc.set.seed = TRUE
     ))
 
   result <-
