@@ -270,7 +270,7 @@ est_q <- function(fn,
                   step = 1e-4,
                   c,
                   k) {
-  seq_q <- seq(from = 0, to = 1e3L, by = step)
+  seq_q <- seq(from = step, to = 1e3L, by = step)
 
   test_q1 <- function(q) {
     integrate(
