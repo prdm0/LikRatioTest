@@ -152,8 +152,14 @@ lrt <- function(f, data, kicks, par0 = NULL, ...) {
   fdp_chisq_inf <- function(par, x) {
     k <- par[1]
     c <- par[2]
+
+    indet <- 1 - pchisq(q = x, df = k)
+
+    # Corrigindo problema de indeterminação que poderá ocorrer.
+    indet[indet == 0] <- .Machine$double.eps
+
     dchisq(x = x, df = k) * (1 - (1 - pchisq(q = x, df = k)) ^ c + c * pchisq(q = x, df = k) *
-                               (1 - pchisq(q = x, df = k)) ^ (c - 1))
+                               (indet) ^ (c - 1))
   }
 
   quantile_chisq <- function(sig, bilateral = FALSE) {
