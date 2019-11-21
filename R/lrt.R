@@ -35,7 +35,7 @@
 #'   data <- rw(n = 100L, alpha = 1, beta = 1)
 #'
 #'   lrt(f = pdf_w, data = data, kicks = c(1, 1), par0 = list("beta", 1))
-lrt <- function(f, data, kicks, par0 = NULL, ...) {
+lrt <- function(f, data, kicks, par0 = NULL, par1 = NULL, ...) {
   if (is.null(par0))
     stop("Informar uma lista informando o parâmetro e o valor sob a hipótese nula.")
 
@@ -44,9 +44,9 @@ lrt <- function(f, data, kicks, par0 = NULL, ...) {
     -sum(log(f(par, x, var = par0)))
   }
 
-  # Log-Likelihood under the null hypothesis. -----------------------------------
+  # Unrestricted log-likelihood. -----------------------------------
   log_lik <- function(par, x) {
-    -sum(log(f(par, x)))
+    -sum(log(f(par, x, var = par1)))
   }
 
   myoptim <-
@@ -89,6 +89,8 @@ lrt <- function(f, data, kicks, par0 = NULL, ...) {
 #' @param kicks Vetor com os chutes iniciais utilizados para a otimização.
 #' @param par0 Lista com dois elementos, sendo o primeiro um vetor com os nomes das variáveis que receberão valores fixos sob a
 #' hipótese nula e o segundo elemendo é um outro vetor com os valores impostos às variáveis.
+#' @param par1 Lista com dois elementos, sendo o primeiro um vetor com os nomes das variáveis que receberão valores fixos sob a
+#' hipótese alternativa e o segundo elemendo é um outro vetor com os valores impostos às variáveis.
 #' @param ncores Número de núcleos a ser considerado. Por padrão, \code{ncores = 1L}.
 #' @param bilateral Se \code{TRUE}, retorna os quantis para um teste bilateral. O padrão considera
 #' \code{bilateral  = FALSE}.
@@ -134,7 +136,7 @@ lrt <- function(f, data, kicks, par0 = NULL, ...) {
 #' tictoc::toc()
 #' @export
 # Simulação de Monte-Carlo ------------------------------------------------
-  mc <- function(N = 1L,
+mc <- function(N = 1L,
                n = 50L,
                sig = 0.05,
                f,
@@ -320,3 +322,23 @@ est_q <- function(fn,
     return(j)
   }
 }
+
+
+# Implementando a função poder --------------------------------------------
+
+
+# power_test <- function(N = 1L,
+#                        n = 50L,
+#                        sig = 0.05,
+#                        f,
+#                        q,
+#                        kicks,
+#                        par0,
+#                        ncores = 1L,
+#                        p,
+#                        bilateral = FALSE,
+#                        step = 1e-3,
+#                        ...) {
+#
+#
+# }
