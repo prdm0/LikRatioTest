@@ -14,6 +14,8 @@
 #' @param data Um conjunto de dados que será considerado para a realização do teste.
 #' @param par0 Uma lista contendo como primeiro elemento um vetor com o nomes das variáveis que serão fixadas como hipótese nula
 #' (variáveis aos quais desejamos testar) e um vetor com os valores fixados para cada uma das respectivas variáveis.
+#' @param par1 Lista com dois elementos, sendo o primeiro um vetor com os nomes das variáveis que receberão valores fixos sob a
+#' hipótese alternativa e o segundo elemendo é um outro vetor com os valores impostos às variáveis.
 #' @param kicks Chutes iniciais que desejamos considerar no método de otimização.
 #' @param ... Lista de argumentos adicionais que serão passados à função \code{optim()} otimizada para otimização. Por exemplo,
 #' será possível escolher o método de otimização a ser utilizado.
@@ -89,8 +91,6 @@ lrt <- function(f, data, kicks, par0 = NULL, par1 = NULL, ...) {
 #' @param kicks Vetor com os chutes iniciais utilizados para a otimização.
 #' @param par0 Lista com dois elementos, sendo o primeiro um vetor com os nomes das variáveis que receberão valores fixos sob a
 #' hipótese nula e o segundo elemendo é um outro vetor com os valores impostos às variáveis.
-#' @param par1 Lista com dois elementos, sendo o primeiro um vetor com os nomes das variáveis que receberão valores fixos sob a
-#' hipótese alternativa e o segundo elemendo é um outro vetor com os valores impostos às variáveis.
 #' @param ncores Número de núcleos a ser considerado. Por padrão, \code{ncores = 1L}.
 #' @param bilateral Se \code{TRUE}, retorna os quantis para um teste bilateral. O padrão considera
 #' \code{bilateral  = FALSE}.
