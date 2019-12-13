@@ -19,6 +19,9 @@ implementada conforme os exemplos.}
 
 \item{...}{Lista de argumentos adicionais que serão passados à função \code{optim()} otimizada para otimização. Por exemplo,
 será possível escolher o método de otimização a ser utilizado.}
+
+\item{par1}{Lista com dois elementos, sendo o primeiro um vetor com os nomes das variáveis que receberão valores fixos sob a
+hipótese alternativa e o segundo elemendo é um outro vetor com os valores impostos às variáveis.}
 }
 \value{
 Valor da estatística do teste da razão de verossimilhança generalizada.

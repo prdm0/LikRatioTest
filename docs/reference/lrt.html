@@ -109,7 +109,7 @@
     <p>Calcula a estatística da razão de verossimilhança generalizada.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>lrt</span>(<span class='no'>f</span>, <span class='no'>data</span>, <span class='no'>kicks</span>, <span class='kw'>par0</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>lrt</span>(<span class='no'>f</span>, <span class='no'>data</span>, <span class='no'>kicks</span>, <span class='kw'>par0</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>par1</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -131,6 +131,11 @@ implementada conforme os exemplos.</p></td>
       <th>par0</th>
       <td><p>Uma lista contendo como primeiro elemento um vetor com o nomes das variáveis que serão fixadas como hipótese nula
 (variáveis aos quais desejamos testar) e um vetor com os valores fixados para cada uma das respectivas variáveis.</p></td>
+    </tr>
+    <tr>
+      <th>par1</th>
+      <td><p>Lista com dois elementos, sendo o primeiro um vetor com os nomes das variáveis que receberão valores fixos sob a
+hipótese alternativa e o segundo elemendo é um outro vetor com os valores impostos às variáveis.</p></td>
     </tr>
     <tr>
       <th>...</th>

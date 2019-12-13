@@ -8,7 +8,6 @@
 #' a distribuição sob a hipótese nula, utiliza-se o argumento \code{par0} que receberá uma lista formada por dois vetores.
 #' O primeiro vetor da lista de verá ser um vetor de strings com os nomes das variáveis que deseja-se fixar e o segundo vetor
 #' deverá conter os valores que serão atribuidos à cada uma das variáveis passada ao primeiro vetor.
-#' @export
 #' @param f Função densidade de probabilidade considerada no teste da razão de verossimilhança. Essa função deverá ser
 #' implementada conforme os exemplos.
 #' @param data Um conjunto de dados que será considerado para a realização do teste.
@@ -37,7 +36,8 @@
 #'   data <- rw(n = 100L, alpha = 1, beta = 1)
 #'
 #'   lrt(f = pdf_w, data = data, kicks = c(1, 1), par0 = list("beta", 1))
-lrt <- function(f, data, kicks, par0 = NULL, par1 = NULL, ...) {
+#' @export
+lrt <- function(f, data, kicks, par0 = NULL, ...) {
   if (is.null(par0))
     stop("Informar uma lista informando o parâmetro e o valor sob a hipótese nula.")
 
@@ -48,7 +48,7 @@ lrt <- function(f, data, kicks, par0 = NULL, par1 = NULL, ...) {
 
   # Unrestricted log-likelihood. -----------------------------------
   log_lik <- function(par, x) {
-    -sum(log(f(par, x, var = par1)))
+    -sum(log(f(par, x)))
   }
 
   myoptim <-
@@ -323,22 +323,128 @@ est_q <- function(fn,
   }
 }
 
+#' @importFrom purrr map_dbl
+bootstraping <- function(B = 250L, sample_true, stat, ...) {
+  # A função resample() obtem uma amostra com reposição de x:
+  resample <- function(x) {
+    n <- length(x)
+    # Selecionando observações uniformemente distribuídas em x.
+    # Poderia ser utilizado a função sample().
+    x[floor(n * runif(n = n, min = 0, max = 1) + 1L)]
+  }
 
-# Implementando a função poder --------------------------------------------
+  # A função boot() calcula uma statística em uma única amostra
+  # bootstrap:
+  boot <- function(x, sample_true) {
+    stat(resample(sample_true), ...)
+  }
 
+  purrr::map_dbl(.x = 1L:B,
+                 .f = boot,
+                 sample_true = sample_true)
 
-# power_test <- function(N = 1L,
-#                        n = 50L,
-#                        sig = 0.05,
-#                        f,
-#                        q,
-#                        kicks,
-#                        par0,
-#                        ncores = 1L,
-#                        p,
-#                        bilateral = FALSE,
-#                        step = 1e-3,
-#                        ...) {
-#
-#
-# }
+}
+
+#' @title Função para o cálculo do poder do teste
+#' @export
+#' @examples
+#' pdf_ew <- function(par, x, var = NULL){
+#'   alpha <- par[1]
+#'   sigma <- par[2]
+#'   theta <- par[3]
+#'
+#' if (is.list(var)) eval(parse(text = paste(var[[1]], " <- ", unlist(var[[2]]), sep = "")))
+#'
+#'   alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) *
+#'     exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
+#' }
+#'
+#' rew <- function(n, alpha, sigma, theta){
+#'   u <- runif(n, 0, 1)
+#'   sigma * (-log(1 - u ^ (1 / theta))) ^ (1 / alpha)
+#' }
+#'
+#' set.seed(1L, kind = "L'Ecuyer-CMRG")
+#'
+#' tictoc::tic()
+#' power_test(N = 200L,
+#'            B = 250L,
+#'            n = 250L,
+#'            f = pdf_ew,
+#'            sig = 0.05,
+#'            q = rew,
+#'            kicks = c(1, 1, 1),
+#'            par0 = list(c("sigma", "theta"), c(1.5, 1.8)),
+#'            ncores = 4L,
+#'            alpha = 1.2,
+#'            sigma = 1,
+#'            theta = 1.3
+#' )
+#' tictoc::toc()
+power_test <-
+  function(N = 1e3L,
+           B = 250L,
+           n,
+           f,
+           sig,
+           q,
+           kicks,
+           par0,
+           ncores,
+           chisinf = FALSE,
+           ...) {
+    lrt_boot <- function(x) {
+      lrt(
+        f = f,
+        data = x,
+        kicks = kicks,
+        par0 = par0
+      )
+    }
+
+    # Um passo de Monte-Carlo
+    mc_one_step <- function(i) {
+      sample_true <- q(n = n, ...)
+
+      q0 <- function(q, n, par0, ...) {
+        ndot <- ...length()
+
+        var <-
+          eval(parse(text = paste0(
+            "names(", as.character(deparse(substitute(list(
+              ...
+            )))), ")"
+          )))
+
+        for (i in 1:ndot) {
+          eval(parse(text = paste0(var[i], " <- ", ...elt(i))))
+        }
+
+        eval(parse(text = paste(par0[[1]], "<-", par0[[2]])))
+        return(eval(body(q)))
+      }
+
+      sample_0 <- q0(q, n, par0, ...)
+
+      t <- lrt(f,
+               data = sample_true,
+               kicks = kicks,
+               par0 = par0)
+
+      q_boot <-
+        quantile(bootstraping(B = B, sample_0, stat = lrt_boot), prob = 1 - sig)
+
+      sucess <- ifelse(t > q_boot, 1L, 0L)
+      sucess
+    }
+
+    result_vector <-
+      unlist(pbmcapply::pbmclapply(
+        X = 1L:N,
+        FUN = mc_one_step,
+        mc.cores = ncores
+      ))
+
+    sum(result_vector) / N
+
+  }

@@ -3,6 +3,8 @@
 export(est_q)
 export(lrt)
 export(mc)
+export(power_test)
+importFrom(purrr,map_dbl)
 importFrom(stats,dchisq)
 importFrom(stats,integrate)
 importFrom(stats,optim)

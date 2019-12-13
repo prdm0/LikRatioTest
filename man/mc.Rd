@@ -4,8 +4,20 @@
 \alias{mc}
 \title{Simulações de Monte-Carlo para o teste da razão de verossimilhança generalizado.}
 \usage{
-mc(N = 1L, n = 50L, sig = 0.05, f, q, kicks, par0, ncores = 1L, p,
-  bilateral = FALSE, step = 0.001, ...)
+mc(
+  N = 1L,
+  n = 50L,
+  sig = 0.05,
+  f,
+  q,
+  kicks,
+  par0,
+  ncores = 1L,
+  p,
+  bilateral = FALSE,
+  step = 0.001,
+  ...
+)
 }
 \arguments{
 \item{N}{Número de réplicas de Monte-Carlo a ser considerada.}
