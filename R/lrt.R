@@ -346,7 +346,6 @@ bootstraping <- function(B = 250L, sample_true, stat, ...) {
 }
 
 #' @title Função para o cálculo do poder do teste
-#' @export
 #' @examples
 #' pdf_ew <- function(par, x, var = NULL){
 #'   alpha <- par[1]
@@ -381,6 +380,7 @@ bootstraping <- function(B = 250L, sample_true, stat, ...) {
 #'            theta = 1.3
 #' )
 #' tictoc::toc()
+#' @export
 power_test <-
   function(N = 1e3L,
            B = 250L,
