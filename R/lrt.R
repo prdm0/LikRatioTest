@@ -323,26 +323,39 @@ est_q <- function(fn,
   }
 }
 
-#' @importFrom purrr map_dbl
-bootstraping <- function(B = 250L, sample_true, stat, ...) {
+bootstraping <- function(B = 250L, f, kicks, par0, sample_true) {
   # A função resample() obtem uma amostra com reposição de x:
-  resample <- function(x) {
-    n <- length(x)
-    # Selecionando observações uniformemente distribuídas em x.
-    # Poderia ser utilizado a função sample().
-    x[floor(n * runif(n = n, min = 0, max = 1) + 1L)]
-  }
+  # resample <- function(x) {
+  #   n <- length(x)
+  #   # Selecionando observações uniformemente distribuídas em x.
+  #   # Poderia ser utilizado a função sample().
+  #   x[floor(n * runif(n = n, min = 0, max = 1) + 1L)]
+  # }
 
   # A função boot() calcula uma statística em uma única amostra
   # bootstrap:
-  boot <- function(x, sample_true) {
-    stat(resample(sample_true), ...)
+
+  vec_t_boot <- double(length = B)
+
+  for(b in 1L:B){
+    repeat{
+      t_boot <- lrt(f,
+                    data = sample(x = sample_true, size = length(sample_true), replace = TRUE),
+                    kicks = kicks,
+                    par0 = par0)
+      if (!is.na(t_boot))
+        break
+
+    }
+
+    vec_t_boot[b] <- t_boot
   }
 
-  purrr::map_dbl(.x = 1L:B,
-                 .f = boot,
-                 sample_true = sample_true)
+  vec_t_boot
 
+  # purrr::map_dbl(.x = 1L:B,
+  #                .f = boot,
+  #                sample_true = sample_true)
 }
 
 #' @title Função para o cálculo do poder do teste
@@ -404,7 +417,18 @@ power_test <-
 
     # Um passo de Monte-Carlo
     mc_one_step <- function(i) {
-      sample_true <- q(n = n, ...)
+
+      repeat{
+        sample_true <- q(n = n, ...)
+        t <- lrt(f,
+                 data = sample_true,
+                 kicks = kicks,
+                 par0 = par0)
+
+        if (!is.na(t))
+          break
+
+      }
 
       q0 <- function(q, n, par0, ...) {
         ndot <- ...length()
@@ -426,13 +450,8 @@ power_test <-
 
       sample_0 <- q0(q, n, par0, ...)
 
-      t <- lrt(f,
-               data = sample_true,
-               kicks = kicks,
-               par0 = par0)
-
       q_boot <-
-        quantile(bootstraping(B = B, sample_0, stat = lrt_boot), prob = 1 - sig)
+        quantile(bootstraping(B = B, f = f, kicks = kicks, par0 = par0, sample_true = sample_0), prob = 1 - sig)
 
       sucess <- ifelse(t > q_boot, 1L, 0L)
       sucess
@@ -445,6 +464,6 @@ power_test <-
         mc.cores = ncores
       ))
 
-    sum(result_vector) / N
+    mean(result_vector)
 
   }
