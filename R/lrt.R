@@ -337,12 +337,18 @@ bootstraping <- function(B = 250L, f, kicks, par0, sample_true) {
 
   vec_t_boot <- double(length = B)
 
-  for(b in 1L:B){
-    repeat{
-      t_boot <- lrt(f,
-                    data = sample(x = sample_true, size = length(sample_true), replace = TRUE),
-                    kicks = kicks,
-                    par0 = par0)
+  for (b in 1L:B) {
+    repeat {
+      t_boot <- lrt(
+        f,
+        data = sample(
+          x = sample_true,
+          size = length(sample_true),
+          replace = TRUE
+        ),
+        kicks = kicks,
+        par0 = par0
+      )
       if (!is.na(t_boot))
         break
 
@@ -358,41 +364,56 @@ bootstraping <- function(B = 250L, f, kicks, par0, sample_true) {
   #                sample_true = sample_true)
 }
 
-#' @title Função para o cálculo do poder do teste
+#' @title Função para o cálculo do poder do teste.
+#' @param N Número de réplicas de Monte-Carlo.
+#' @param B Número de réplicas de bootstrap.
+#' @param n Tamanho da amostra.
+#' @param sig Nível de significância.
+#' @param q Função quantílica para a geração da amostra.
+#' @param kicks Chutes iniciais.
+#' @param par0 Lista de parâmetros para serem fixados na hipótese nula.
+#' @param ncores Quantidade de cores utilizados na paralelização.
+#' @param p Valor do parâmetro \strong{p}.
+#' @param step Passos para das integrais calculadas para obtenção do quantil da distribuiçao Chisq-Inf.
+#' @param ... Parâmetros para geração da amostra verdadeira.
 #' @examples
-#' pdf_ew <- function(par, x, var = NULL){
-#'   alpha <- par[1]
-#'   sigma <- par[2]
-#'   theta <- par[3]
-#'
-#' if (is.list(var)) eval(parse(text = paste(var[[1]], " <- ", unlist(var[[2]]), sep = "")))
-#'
-#'   alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) *
-#'     exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
-#' }
-#'
-#' rew <- function(n, alpha, sigma, theta){
-#'   u <- runif(n, 0, 1)
-#'   sigma * (-log(1 - u ^ (1 / theta))) ^ (1 / alpha)
-#' }
-#'
-#' set.seed(1L, kind = "L'Ecuyer-CMRG")
-#'
-#' tictoc::tic()
-#' power_test(N = 200L,
-#'            B = 250L,
-#'            n = 250L,
-#'            f = pdf_ew,
-#'            sig = 0.05,
-#'            q = rew,
-#'            kicks = c(1, 1, 1),
-#'            par0 = list(c("sigma", "theta"), c(1.5, 1.8)),
-#'            ncores = 4L,
-#'            alpha = 1.2,
-#'            sigma = 1,
-#'            theta = 1.3
-#' )
-#' tictoc::toc()
+#'# pdf_ew <- function(par, x, var = NULL) {
+#'#   alpha <- par[1]
+#'#   sigma <- par[2]
+#'#   theta <- par[3]
+#'#
+#'#   if (is.list(var))
+#'#     eval(parse(text = paste(var[[1]], " <- ", unlist(var[[2]]), sep = "")))
+#'#
+#'#   alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) *
+#'#     exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
+#'# }
+#'#
+#'# rew <- function(n, alpha, sigma, theta){
+#'#   u <- runif(n, 0, 1)
+#'#   sigma * (-log(1 - u ^ (1 / theta))) ^ (1 / alpha)
+#'# }
+#'#
+#'# set.seed(1L, kind = "L'Ecuyer-CMRG")
+#'#
+#'# tictoc::tic()
+#'# power_test(N = 1e4L,
+#'#            B = 250L,
+#'#            n = 150L,
+#'#            f = pdf_ew,
+#'#            sig = 0.05,
+#'#            q = rew,
+#'#            kicks = c(1, 1, 1),
+#'#            par0 = list(c("alpha", "theta"), c(1.5, 1.7)),
+#'#            ncores = 8L,
+#'#            p = 0.5,
+#'#            step = 1e-3,
+#'#            alpha = 1.5,
+#'#            sigma = 1.5,
+#'#            theta = 1.7
+#'#
+#'# )
+#'# tictoc::toc()
 #' @export
 power_test <-
   function(N = 1e3L,
@@ -404,8 +425,16 @@ power_test <-
            kicks,
            par0,
            ncores,
-           chisinf = FALSE,
+           p = 0.5,
+           step = 1e-3,
            ...) {
+    fdp_chisq_inf <- function(par, x) {
+      k <- par[1]
+      c <- par[2]
+      dchisq(x = x, df = k) * (1 - (1 - pchisq(q = x, df = k)) ^ c + c * pchisq(q = x, df = k) *
+                                 (1 - pchisq(q = x, df = k)) ^ (c - 1))
+    }
+
     lrt_boot <- function(x) {
       lrt(
         f = f,
@@ -417,8 +446,7 @@ power_test <-
 
     # Um passo de Monte-Carlo
     mc_one_step <- function(i) {
-
-      repeat{
+      repeat {
         sample_true <- q(n = n, ...)
         t <- lrt(f,
                  data = sample_true,
@@ -451,19 +479,47 @@ power_test <-
       sample_0 <- q0(q, n, par0, ...)
 
       q_boot <-
-        quantile(bootstraping(B = B, f = f, kicks = kicks, par0 = par0, sample_true = sample_0), prob = 1 - sig)
+        quantile(bootstraping(
+          B = B,
+          f = f,
+          kicks = kicks,
+          par0 = par0,
+          sample_true = sample_0
+        ),
+        prob = 1 - sig)
 
-      sucess <- ifelse(t > q_boot, 1L, 0L)
-      sucess
+      sucess_theoretical <- ifelse(t > q_boot, 1L, 0L)
+      sucess_chisc <-
+        ifelse(t > qchisq(p = 1 - sig, df = length(par0[[1]])), 1L, 0L)
+
+      sucess_chisc_inf <-
+        ifelse(
+          t > est_q(
+            fdp_chisq_inf,
+            alpha = sig,
+            bilateral = FALSE,
+            step = step,
+            c = p * log(n),
+            k = length(par0[[1]])
+          ),
+          1L,
+          0L
+        )
+
+      c(sucess_theoretical, sucess_chisc, sucess_chisc_inf)
+
     }
 
-    result_vector <-
+    result_list <-
       unlist(pbmcapply::pbmclapply(
         X = 1L:N,
         FUN = mc_one_step,
         mc.cores = ncores
       ))
 
-    mean(result_vector)
+    matrix_result <- matrix(result_list, ncol = 3L, byrow = TRUE)
+    colnames(matrix_result) <-
+      c("theoretical", "chisq", "chisq_inf")
+    apply(X = matrix_result, MARGIN = 2L, FUN = mean)
 
-  }
+}

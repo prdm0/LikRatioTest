@@ -2,7 +2,7 @@
 % Please edit documentation in R/lrt.R
 \name{power_test}
 \alias{power_test}
-\title{Função para o cálculo do poder do teste}
+\title{Função para o cálculo do poder do teste.}
 \usage{
 power_test(
   N = 1000L,
@@ -14,45 +14,73 @@ power_test(
   kicks,
   par0,
   ncores,
-  chisinf = FALSE,
+  p = 0.5,
+  step = 0.001,
   ...
 )
 }
+\arguments{
+\item{N}{Número de réplicas de Monte-Carlo.}
+
+\item{B}{Número de réplicas de bootstrap.}
+
+\item{n}{Tamanho da amostra.}
+
+\item{sig}{Nível de significância.}
+
+\item{q}{Função quantílica para a geração da amostra.}
+
+\item{kicks}{Chutes iniciais.}
+
+\item{par0}{Lista de parâmetros para serem fixados na hipótese nula.}
+
+\item{ncores}{Quantidade de cores utilizados na paralelização.}
+
+\item{p}{Valor do parâmetro \strong{p}.}
+
+\item{step}{Passos para das integrais calculadas para obtenção do quantil da distribuiçao Chisq-Inf.}
+
+\item{...}{Parâmetros para geração da amostra verdadeira.}
+}
 \description{
-Função para o cálculo do poder do teste
+Função para o cálculo do poder do teste.
 }
 \examples{
-pdf_ew <- function(par, x, var = NULL){
-  alpha <- par[1]
-  sigma <- par[2]
-  theta <- par[3]
-
-if (is.list(var)) eval(parse(text = paste(var[[1]], " <- ", unlist(var[[2]]), sep = "")))
-
-  alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) *
-    exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
-}
-
-rew <- function(n, alpha, sigma, theta){
-  u <- runif(n, 0, 1)
-  sigma * (-log(1 - u ^ (1 / theta))) ^ (1 / alpha)
-}
-
-set.seed(1L, kind = "L'Ecuyer-CMRG")
-
-tictoc::tic()
-power_test(N = 200L,
-           B = 250L,
-           n = 250L,
-           f = pdf_ew,
-           sig = 0.05,
-           q = rew,
-           kicks = c(1, 1, 1),
-           par0 = list(c("sigma", "theta"), c(1.5, 1.8)),
-           ncores = 4L,
-           alpha = 1.2,
-           sigma = 1,
-           theta = 1.3
-)
-tictoc::toc()
+# pdf_ew <- function(par, x, var = NULL) {
+#   alpha <- par[1]
+#   sigma <- par[2]
+#   theta <- par[3]
+#
+#   if (is.list(var))
+#     eval(parse(text = paste(var[[1]], " <- ", unlist(var[[2]]), sep = "")))
+#
+#   alpha * theta / sigma * (1 - exp(-(x / sigma) ^ alpha)) ^ (theta - 1) *
+#     exp(-(x / sigma) ^ alpha) * (x / sigma) ^ (alpha - 1)
+# }
+#
+# rew <- function(n, alpha, sigma, theta){
+#   u <- runif(n, 0, 1)
+#   sigma * (-log(1 - u ^ (1 / theta))) ^ (1 / alpha)
+# }
+#
+# set.seed(1L, kind = "L'Ecuyer-CMRG")
+#
+# tictoc::tic()
+# power_test(N = 1e4L,
+#            B = 250L,
+#            n = 150L,
+#            f = pdf_ew,
+#            sig = 0.05,
+#            q = rew,
+#            kicks = c(1, 1, 1),
+#            par0 = list(c("alpha", "theta"), c(1.5, 1.7)),
+#            ncores = 8L,
+#            p = 0.5,
+#            step = 1e-3,
+#            alpha = 1.5,
+#            sigma = 1.5,
+#            theta = 1.7
+#
+# )
+# tictoc::toc()
 }

@@ -18,7 +18,7 @@ rew <- function(n, alpha, sigma, theta){
 set.seed(1L, kind = "L'Ecuyer-CMRG")
 
 tictoc::tic()
-power_test(N = 1000L,
+power_test(N = 1e4L,
            B = 250L,
            n = 150L,
            f = pdf_ew,
@@ -26,10 +26,13 @@ power_test(N = 1000L,
            q = rew,
            kicks = c(1, 1, 1),
            par0 = list(c("alpha", "theta"), c(1.5, 1.7)),
-           ncores = 4L,
+           ncores = 8L,
+           p = 0.5,
+           step = 1e-3,
            alpha = 1.5,
            sigma = 1.5,
            theta = 1.7
+
 )
 tictoc::toc()
 
