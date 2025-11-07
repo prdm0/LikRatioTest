@@ -14,6 +14,7 @@ mc(
   par0,
   ncores = 1L,
   p,
+  c = NULL,
   bilateral = FALSE,
   step = 0.001,
   ...
@@ -37,7 +38,7 @@ hipótese nula e o segundo elemendo é um outro vetor com os valores impostos à
 
 \item{ncores}{Número de núcleos a ser considerado. Por padrão, \code{ncores = 1L}.}
 
-\item{p}{Valor utilizado para controlar o parâmetro da Qui-quadrado inf.}
+\item{p}{Valor utilizado para controlar o parâmetro da Qui-quadrado inf. Se o valor de \code{c} for diferente de \code{NULL}, esse argumento será desconsiderado.}
 
 \item{bilateral}{Se \code{TRUE}, retorna os quantis para um teste bilateral. O padrão considera
 \code{bilateral  = FALSE}.}

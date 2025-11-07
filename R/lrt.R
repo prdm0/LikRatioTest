@@ -94,7 +94,7 @@ lrt <- function(f, data, kicks, par0 = NULL, ...) {
 #' @param ncores Número de núcleos a ser considerado. Por padrão, \code{ncores = 1L}.
 #' @param bilateral Se \code{TRUE}, retorna os quantis para um teste bilateral. O padrão considera
 #' \code{bilateral  = FALSE}.
-#' @param p Valor utilizado para controlar o parâmetro da Qui-quadrado inf.
+#' @param p Valor utilizado para controlar o parâmetro da Qui-quadrado inf. Se o valor de \code{c} for diferente de \code{NULL}, esse argumento será desconsiderado.
 #' @param step Tamanho do passo da integral numeérica responsável pela obtenção dos quantis da Qui-Quadrado inf.
 #' O padrão considera \code{step = 1e-3}.
 #' @param ... Lista de argumetos que serão passados para a função passada à \code{q}.
@@ -145,10 +145,15 @@ mc <- function(N = 1L,
                par0,
                ncores = 1L,
                p,
+               c = NULL,
                bilateral = FALSE,
                step = 1e-3,
                ...) {
-  c <- p * log(n) # Regra para escolhar de c.
+  
+  
+  if(is.null(c)) {
+    c <- p * log(n) # Regra para escolhar de c.
+  } 
 
   # Função densidade de probabilidade Qui-Quadrado inf.
   fdp_chisq_inf <- function(par, x) {
